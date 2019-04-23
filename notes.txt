@@ -1,0 +1,33 @@
+group 1 (1536 bytes)
+	- chunk 1 (512 bytes) (random lower case letters)
+	- chunk 2 (512 bytes) (random lower case letters)
+	- chunk 3 (512 bytes) (random lower case letters)
+
+group 2 (1536 bytes)
+	- chunk 1 (512 bytes) (RANDOM UPPER CASE LETTERS)
+	- chunk 2 (512 bytes) (RANDOM UPPER CASE LETTERS)
+	- chunk 3 (512 bytes) (RANDOM UPPER CASE LETTERS)
+
+group 3 (1536 bytes)
+	- chunk 1 (512 bytes) (RANDOM UPPER CASE LETTERS)
+	- chunk 2 (512 bytes) (RANDOM UPPER CASE LETTERS)
+	- chunk 3 (512 bytes) (RANDOM UPPER CASE LETTERS)
+
+group 4 (1536 bytes)
+	- chunk 1 (512 bytes) (RANDOM UPPER CASE LETTERS)
+	- chunk 2 (512 bytes) (RANDOM UPPER CASE LETTERS)
+	- chunk 3 (512 bytes) (RANDOM UPPER CASE LETTERS)
+
+processes (5)
+	- generate 32 bit random integer: speed_check
+	- if (speed_check < 5000):
+		- generate two random values to choose two random groups
+		- for each group generate a random value to choose a random chunk
+		- swap the two chunks completely
+		- while the swap is happening, no other process can swap with
+		  the same chunk
+		- break while if operationsComplete > userInput
+	- last process to terminate removes resources
+
+NO DEADLOCK (handle explicitly)
+	
