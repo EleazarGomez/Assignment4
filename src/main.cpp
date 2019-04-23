@@ -25,24 +25,23 @@ int main()
 	printf("Parent prints: %s\n", str);
 	
 	// Fork
-	long childPID = 0;
-
-	childPID = fork();
-
-	if (childPID == 0) // CHILD
+	for (int i = 1; i < 6; i++)
 	{
-		sprintf(str, "Goodbye, world.");
-		exit(0);
+		long childPID = 0;
+
+		childPID = fork();
+
+		if (childPID == 0) // CHILD
+		{
+			cout << "Process " << i << endl;
+			//sprintf(str, "Goodbye, world.");
+			exit(0);
+		}
 	}
-	else // PARENT
-	{
-		// Print out the string from shared memory.
-		wait(NULL);
-		printf("Parent reads: %s\n", str);
-		// Detach
-		shmdt(str);
-		shmctl(segmentID, IPC_RMID, 0);
-	}
+
+	wait(NULL);
+	shmdt(str); // detach
+	shmctl(segmentID, IPC_RMID, 0); // destroy memory
 
 	return 0; 
 } 
