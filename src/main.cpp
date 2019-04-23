@@ -1,4 +1,4 @@
-//#include <string>
+#include <string>
 #include <iostream>
 #include <unistd.h>    // fork
 #include <sys/wait.h>  // wait 
@@ -10,15 +10,13 @@ int main()
 {
 	int segmentID;
 
-	const int segmentSize = 1024;
-
-	key_t key = ftok("shmfile", 65); 
+	const int segmentSize = 6144; // Enough for the 4 groups of 3 chunks
 
 	// Allocate a shared memory segment.
-	segmentID = shmget(key, segmentSize, 0666 | IPC_CREAT);
+	segmentID = shmget(IPC_PRIVATE, segmentSize, 0666 | IPC_CREAT);
 
-	// Attach the shared memory segment.
-	char* str = (char*) shmat(segmentID, (void*) 0, 0);
+	// Attach to the shared memory segment.
+	char* str = (char*) shmat(segmentID, 0, SHM_RND);
 
 	// Write a string to the shared memory segment.
 	sprintf(str, "Hello, world.");
@@ -34,14 +32,22 @@ int main()
 		if (childPID == 0) // CHILD
 		{
 			cout << "Process " << i << endl;
-			//sprintf(str, "Goodbye, world.");
+			sprintf(str, "Goodbye, world.");
 			exit(0);
 		}
 	}
 
+	// Wait for all processes to finish
 	wait(NULL);
+	wait(NULL);
+	wait(NULL);
+	wait(NULL);
+	wait(NULL);
+
+	// Print results, detach, and destroy
+	printf("Parent reads: %s\n", str);
 	shmdt(str); // detach
-	shmctl(segmentID, IPC_RMID, 0); // destroy memory
+	shmctl(segmentID, IPC_RMID, NULL); // destroy memory
 
 	return 0; 
 } 
