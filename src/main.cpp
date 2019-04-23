@@ -1,45 +1,48 @@
-#include <stdio.h> 
-#include <sys/shm.h> 
-#include <sys/stat.h> 
-#include <string>
-#include <vector>
+//#include <string>
 #include <iostream>
+#include <unistd.h>    // fork
+#include <sys/wait.h>  // wait 
+#include <sys/shm.h>   // shared mem
 
 using namespace std;
 
 int main() 
 {
-	int segment_id; 
+	int segmentID;
 
-	struct shmid_ds shmbuffer; 
+	const int segmentSize = 1024;
 
-	int segment_size; 
+	key_t key = ftok("shmfile", 65); 
 
-	const int shared_segment_size = 1024;
+	// Allocate a shared memory segment.
+	segmentID = shmget(key, segmentSize, 0666 | IPC_CREAT);
 
-	key_t key = ftok("shmfile",65); 
+	// Attach the shared memory segment.
+	char* str = (char*) shmat(segmentID, (void*) 0, 0);
 
-	/* Allocate a shared memory segment.  */
-	segment_id = shmget(key, shared_segment_size,
-				  0666 | IPC_CREAT);
-
-	/* Attach the shared memory segment.  */
-	char* str = (char*) shmat(segment_id, (void*) 0, 0);
-
-	printf("shared memory attached at address %p\n", str);
-
-	/* Determine the segment's size. */
-	shmctl(segment_id, IPC_STAT, &shmbuffer);
-
-	segment_size = shmbuffer.shm_segsz;
-
-	printf("segment size: %d\n", segment_size);
-
-	/* Write a string to the shared memory segment.  */
+	// Write a string to the shared memory segment.
 	sprintf(str, "Hello, world.");
+	printf("Parent prints: %s\n", str);
+	
+	// Fork
+	long childPID = 0;
 
-	/* Detach the shared memory segment.  */ 
-	shmdt(str);
+	childPID = fork();
+
+	if (childPID == 0) // CHILD
+	{
+		sprintf(str, "Goodbye, world.");
+		exit(0);
+	}
+	else // PARENT
+	{
+		// Print out the string from shared memory.
+		wait(NULL);
+		printf("Parent reads: %s\n", str);
+		// Detach
+		shmdt(str);
+		shmctl(segmentID, IPC_RMID, 0);
+	}
 
 	return 0; 
 } 
