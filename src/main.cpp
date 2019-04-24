@@ -35,6 +35,7 @@ int main()
 
 	int numberOfOperations = 0;
 
+	// NEED TO DO: no number less than 1
 	while (true)
 	{
 		cout << "Enter # of process operations: ";
@@ -47,6 +48,11 @@ int main()
 			cin.ignore(numeric_limits<streamsize>::max(), '\n');
 			cout << "Invalid input." << endl;
 		}
+		else if (numberOfOperations < 1)
+		{
+			numberOfOperations = 0;
+			cout << "Invalid input." << endl;
+		}
 		else
 		{
 			break;
@@ -55,7 +61,7 @@ int main()
 	
 
 	// Fork
-	for (int i = 1; i < NUM_PROCESSES + 1; i++)
+	for (int i = 1; i < 1 + 1; i++) // NUM_PROCESSES
 	{
 		long childPID = 0;
 
@@ -69,6 +75,7 @@ int main()
 			cout << "Process " << i << endl;
 
 			int speed_check = 0;
+			int operationsComplete = 0;
 
 			while (true)
 			{
@@ -76,6 +83,7 @@ int main()
 
 				if (speed_check < 5000)
 				{
+					cout << operationsComplete << endl;
 					cout << "\tspeed check: " << speed_check << endl;
 
 					int group1;
@@ -92,12 +100,42 @@ int main()
 
 					int group1chunk = (rand() % NUM_CHUNKS) + 1;
 					int group2chunk = (rand() % NUM_CHUNKS) + 1;
-					
+
+
 					cout << "\t\tGroup " << group1 << " Chunk " <<
 						  group1chunk << endl;
 					cout << "\t\tGroup " << group2 << " Chunk " <<
 						  group2chunk << endl;
-					break;
+
+					// Get starting indexes
+					int g1_start = 0;
+					int g2_start = 0;
+
+					// Offset based on group
+					g1_start += (group1 - 1) * GROUP_SIZE;
+					g2_start += (group2 - 1) * GROUP_SIZE;
+
+					// Offset based on chunk
+					g1_start += (group1chunk - 1) * CHUNK_SIZE;
+					g2_start += (group2chunk - 1) * CHUNK_SIZE;
+
+					int offset = 0;
+	
+					// Swap
+					for (int i = g1_start; i < g1_start + CHUNK_SIZE; i++)
+					{
+						char temp = *(str + i);
+						*(str + i) = *(str + g2_start + offset);
+						*(str + g2_start + offset) = temp;
+						offset++;
+					}
+
+					operationsComplete++;
+
+					if (operationsComplete == numberOfOperations)
+					{
+						break;
+					}
 				}
 			}
 
@@ -114,7 +152,7 @@ int main()
 	wait(NULL);
 
 	// Print results, detach, and destroy
-	//printf("Data:\n\n%s\n", str);
+	printf("\n\nData:\n\n%s\n", str);
 	shmdt(str); // detach
 	shmctl(segmentID, IPC_RMID, NULL); // destroy memory
 
