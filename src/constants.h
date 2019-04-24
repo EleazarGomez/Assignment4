@@ -29,8 +29,8 @@ const int G1C3_END = 1535;
 const int G2C1_START = 1536;
 const int G4C3_END = 6143;
 
-// Enough space for the 4 groups of 3 chunks
-const int SEGMENT_SIZE = 6144;
+// Total size of the 4 groups of 3 chunks
+const int TOTAL_SIZE = 6144;
 
 // Group/Chunk info
 const int NUM_GROUPS = 4;

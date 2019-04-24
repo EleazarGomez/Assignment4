@@ -9,22 +9,23 @@
 
 using namespace std;
 
-void performProcess(int, char*);
+enum {CRITICAL};
+
+void performProcess(int, char*, SEMAPHORE&);
 int getUserInput();
 
-int main() 
+int main()
 {
-	int segmentID;
-
+	// Set seed
 	srand(time(NULL));
 
 	// Allocate a shared memory segment.
-	segmentID = shmget(IPC_PRIVATE, SEGMENT_SIZE, 0666 | IPC_CREAT);
+	int segmentID = shmget(IPC_PRIVATE, TOTAL_SIZE * sizeof(char), PERMS);
 
 	// Attach to the shared memory segment.
 	char* str = (char*) shmat(segmentID, 0, SHM_RND);
 
-	// Intialize data
+	// Intialize data (chars)
 	for (int i = G1C1_START; i <= G1C3_END; i++)
 	{
 		*(str + i) = LOWER_CASE_LETTERS[rand() % L_SIZE];
@@ -38,8 +39,12 @@ int main()
 	// Get input on number of operations
 	int numberOfOperations = getUserInput();
 
+	// Initialize semaphore
+	SEMAPHORE sem(1);
+	sem.V(CRITICAL);
+
 	// Fork
-	for (int i = 1; i < 1 + 1; i++) // NUM_PROCESSES
+	for (int i = 1; i < NUM_PROCESSES + 1; i++) // NUM_PROCESSES
 	{
 		long childPID = 0;
 
@@ -50,9 +55,9 @@ int main()
 
 		if (childPID == 0) // CHILD
 		{
-			cout << "Process " << i << endl;
+			//cout << "Process " << i << endl;
 
-			performProcess(numberOfOperations, str);
+			performProcess(numberOfOperations, str, sem);
 
 			// Exit child process once finished
 			exit(0);
@@ -67,7 +72,7 @@ int main()
 	wait(NULL);
 
 	// Print results, detach, and destroy
-	printf("\n\nData:\n\n%s\n", str);
+	//printf("\n\nData:\n\n%s\n", str);
 	shmdt(str); // detach
 	shmctl(segmentID, IPC_RMID, NULL); // destroy memory
 
@@ -104,7 +109,7 @@ int getUserInput()
 	return numberOfOperations;
 }
 
-void performProcess(int numberOfOperations, char* str)
+void performProcess(int numberOfOperations, char* str, SEMAPHORE& sem)
 {
 	int speed_check = 0;
 	int operationsComplete = 0;
@@ -115,8 +120,8 @@ void performProcess(int numberOfOperations, char* str)
 
 		if (speed_check < SPEED)
 		{
-			cout << operationsComplete << endl;
-			cout << "\tspeed check: " << speed_check << endl;
+			//cout << operationsComplete << endl;
+			//cout << "\tspeed check: " << speed_check << endl;
 
 			int group1;
 			int group2;
@@ -135,10 +140,10 @@ void performProcess(int numberOfOperations, char* str)
 			int group2chunk = (rand() % NUM_CHUNKS) + 1;
 
 
-			cout << "\t\tGroup " << group1 << " Chunk " <<
-				  group1chunk << endl;
-			cout << "\t\tGroup " << group2 << " Chunk " <<
-				  group2chunk << endl;
+			//cout << "\t\tGroup " << group1 << " Chunk " <<
+				  //group1chunk << endl;
+			//cout << "\t\tGroup " << group2 << " Chunk " <<
+				  //group2chunk << endl;
 
 			// Get starting indexes
 			int g1_start = 0;
@@ -153,15 +158,25 @@ void performProcess(int numberOfOperations, char* str)
 			g2_start += (group2chunk - 1) * CHUNK_SIZE;
 
 			int offset = 0;
+			bool first = true;
 
 			// Swap
+			cout << "Process " << getpid() << " attempting to swap" << endl;
+			sem.P(CRITICAL);
 			for (int i = g1_start; i < g1_start + CHUNK_SIZE; i++)
 			{
+				if (first)
+				{
+					first = false;
+					cout << "Process " << getpid() << " swapping" << endl;
+				}
 				char temp = *(str + i);
 				*(str + i) = *(str + g2_start + offset);
 				*(str + g2_start + offset) = temp;
 				offset++;
 			}
+			cout << "Process " << getpid() << " done swapping" << endl;
+			sem.V(CRITICAL);
 
 			operationsComplete++;
 
