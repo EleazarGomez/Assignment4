@@ -3,6 +3,9 @@
 #include <unistd.h>    // fork
 #include <sys/wait.h>  // wait 
 #include <sys/shm.h>   // shared mem
+#include <limits>      // numeric_limits
+//#include <sys/types.h> // getpid?
+//#include <time.h>      // time
 #include "constants.h"
 
 using namespace std;
@@ -10,6 +13,8 @@ using namespace std;
 int main() 
 {
 	int segmentID;
+
+	srand(time(NULL));
 
 	// Allocate a shared memory segment.
 	segmentID = shmget(IPC_PRIVATE, SEGMENT_SIZE, 0666 | IPC_CREAT);
@@ -28,11 +33,27 @@ int main()
 		*(str + i) = UPPER_CASE_LETTERS[rand() % L_SIZE];
 	}
 
-	/*
-	// Write a string to the shared memory segment.
-	sprintf(str, "Hello, world.");
-	printf("Parent prints: %s\n", str);
+	int numberOfOperations = 0;
+
+	while (true)
+	{
+		cout << "Enter # of process operations: ";
+		cin >> numberOfOperations;
+		
+		if (cin.fail())
+		{
+			numberOfOperations = 0;
+			cin.clear();
+			cin.ignore(numeric_limits<streamsize>::max(), '\n');
+			cout << "Invalid input." << endl;
+		}
+		else
+		{
+			break;
+		}
+	}
 	
+
 	// Fork
 	for (int i = 1; i < 6; i++)
 	{
@@ -40,22 +61,47 @@ int main()
 
 		childPID = fork();
 
+		// Set random seed for each process
+		srand(time(NULL) * i * getpid());
+
 		if (childPID == 0) // CHILD
 		{
-			char data[10];
-			for (int i = 0; i < 10; i++)
-			{
-				data[i] = 'a';
-			}
-
 			cout << "Process " << i << endl;
 
-			for (int i = 0; i < 10; i++)
+			int speed_check = 0;
+
+			while (true)
 			{
-				char input = data[i];
-				*(str + i) = input;
+				speed_check = rand();
+
+				if (speed_check < 5000)
+				{
+					cout << "\tspeed check: " << speed_check << endl;
+
+					int group1;
+					int group2;
+				
+					group1 = (rand() % 4) + 1;
+					
+					group2 = group1;
+
+					while (group2 == group1)
+					{
+						group2 = (rand() % 4) + 1;
+					}
+
+					int group1chunk = (rand() % 3) + 1;
+					int group2chunk = (rand() % 3) + 1;
+					
+					cout << "\t\tGroup " << group1 << " Chunk " <<
+						  group1chunk << endl;
+					cout << "\t\tGroup " << group2 << " Chunk " <<
+						  group2chunk << endl;
+					break;
+				}
 			}
 
+			// Exit child process once finished
 			exit(0);
 		}
 	}
@@ -66,10 +112,9 @@ int main()
 	wait(NULL);
 	wait(NULL);
 	wait(NULL);
-	*/
 
 	// Print results, detach, and destroy
-	printf("Parent reads: %s\n", str);
+	//printf("Data:\n\n%s\n", str);
 	shmdt(str); // detach
 	shmctl(segmentID, IPC_RMID, NULL); // destroy memory
 
