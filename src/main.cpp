@@ -113,7 +113,7 @@ void performProcess(int numberOfOperations, char* str)
 	{
 		speed_check = rand();
 
-		if (speed_check < 5000)
+		if (speed_check < SPEED)
 		{
 			cout << operationsComplete << endl;
 			cout << "\tspeed check: " << speed_check << endl;
@@ -125,6 +125,7 @@ void performProcess(int numberOfOperations, char* str)
 			
 			group2 = group1;
 
+			// QUESTION: 2 DIFF GROUPS???
 			while (group2 == group1)
 			{
 				group2 = (rand() % NUM_GROUPS) + 1;
