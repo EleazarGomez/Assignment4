@@ -6,6 +6,8 @@
 
 //#include <string>
 
+const int NUM_PROCESSES = 5;
+
 const char LOWER_CASE_LETTERS[26] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                                      'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 
 						 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 
@@ -61,6 +63,9 @@ const int G4C3_END = 6143;
 
 // Enough space for the 4 groups of 3 chunks
 const int SEGMENT_SIZE = 6144;
+
+const int NUM_GROUPS = 4;
+const int NUM_CHUNKS = 3;
 
 #endif
 

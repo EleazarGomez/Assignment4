@@ -55,7 +55,7 @@ int main()
 	
 
 	// Fork
-	for (int i = 1; i < 6; i++)
+	for (int i = 1; i < NUM_PROCESSES + 1; i++)
 	{
 		long childPID = 0;
 
@@ -81,17 +81,17 @@ int main()
 					int group1;
 					int group2;
 				
-					group1 = (rand() % 4) + 1;
+					group1 = (rand() % NUM_GROUPS) + 1;
 					
 					group2 = group1;
 
 					while (group2 == group1)
 					{
-						group2 = (rand() % 4) + 1;
+						group2 = (rand() % NUM_GROUPS) + 1;
 					}
 
-					int group1chunk = (rand() % 3) + 1;
-					int group2chunk = (rand() % 3) + 1;
+					int group1chunk = (rand() % NUM_CHUNKS) + 1;
+					int group2chunk = (rand() % NUM_CHUNKS) + 1;
 					
 					cout << "\t\tGroup " << group1 << " Chunk " <<
 						  group1chunk << endl;
