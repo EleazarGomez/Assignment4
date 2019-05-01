@@ -1,5 +1,10 @@
-// Eleazar Gomez
-// constants.h
+// Eleazar Gomez, Anton Shirokov
+// main.cpp
+//
+// This file contains the constants used throughout our program so that
+// we can eliminate magic numbers. It includes arrays of characters for,
+// initializeing chunk data, group and chunk attributes, and the value
+// to check speed_check against to slow down the processes.
 
 #ifndef CONSTANTS_H
 #define CONSTANTS_H

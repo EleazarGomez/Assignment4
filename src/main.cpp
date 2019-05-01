@@ -1,3 +1,22 @@
+// Eleazar Gomez, Anton Shirokov
+// main.cpp
+//
+// This file contains the main logic of our program. The main function allocates
+// the shared memory segments (4 in total), intitializes them with characters,
+// gets input on number of operations for each process to carry out, and forks
+// 5 processes to perform swaps on the shared memory. The parent process waits
+// for the processes to complete and deallocates the memory. The main function
+// uses two other functions to carry out ints function, one for getting user
+// input, and one for each child process to execute. The output of the program
+// consists of the groups of memory before any processes start, whenever a process
+// starts or finishes a critical section, and the groups of memory after all
+// processes finish. To make sure that only one process can be executing a
+// critical section at a time, we included the semaphore code provided by the
+// professor. We only use one semaphore variable (CRITICAL) that starts at 1. We
+// call P before the critical section and V after; this setup results in the first
+// process to reach this section being able to execute it and each subsequent
+// process being unable to start the section until the other(s) are finished.
+
 #include <string>      // string
 #include <iostream>    // IO
 #include <unistd.h>    // fork
@@ -9,8 +28,9 @@
 
 using namespace std;
 
-enum {CRITICAL};
+enum {CRITICAL}; // sem var
 
+// Forward declarations
 void performProcess(int, SEMAPHORE&, char*, char*, char*, char*);
 int getUserInput();
 
@@ -66,19 +86,19 @@ int main()
 	sem.V(CRITICAL);
 
 	// Fork
-	for (int i = 1; i < NUM_PROCESSES + 1; i++) // NUM_PROCESSES
+	for (int i = 1; i < NUM_PROCESSES + 1; i++)
 	{
-		long childPID = 0;
+		long childPID = 0; // Stores PID of child (0 if it is the child)
 
 		childPID = fork();
 
-		// Set random seed for each process
+		// Set unique random seed for each process
+		// https://stackoverflow.com/questions/12779235/
+		//         how-to-properly-choose-rng-seed-for-parallel-processes
 		srand(time(NULL) * i * getpid());
 
 		if (childPID == 0) // CHILD
 		{
-			//cout << "Process " << i << endl;
-
 			performProcess(numberOfOperations, sem, str1, str2, str3, str4);
 
 			// Exit child process once finished
@@ -125,6 +145,7 @@ int getUserInput()
 		
 		if (cin.fail())
 		{
+			// Reset variable, clear input, and output error message.
 			numberOfOperations = 0;
 			cin.clear();
 			cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -132,11 +153,13 @@ int getUserInput()
 		}
 		else if (numberOfOperations < 1)
 		{
+			// Reset variable, output error message (invalid input).
 			numberOfOperations = 0;
 			cout << "Invalid input." << endl;
 		}
 		else
 		{
+			// Valid input.
 			break;
 		}
 	}
@@ -147,15 +170,17 @@ int getUserInput()
 void performProcess(int numberOfOperations, SEMAPHORE& sem,
 			  char* str1, char* str2, char* str3, char* str4)
 {
-	int speed_check = 0;
-	int operationsComplete = 0;
+	int speed_check = 0;        // will hold random variable to slow down
+	int operationsComplete = 0; // counts number of operations we have completed
 
 	while (true)
 	{
-		speed_check = rand();
+		speed_check = rand(); // Generate random 32 bit integer.
 
+		// If less than 5000;
 		if (speed_check < SPEED)
 		{
+			// Get two random groups (1 - 4) that are not the same.
 			int group1;
 			int group2;
 		
@@ -168,9 +193,11 @@ void performProcess(int numberOfOperations, SEMAPHORE& sem,
 				group2 = (rand() % NUM_GROUPS) + 1;
 			}
 
+			// Get ranom chunks for the groups.
 			int group1chunk = (rand() % NUM_CHUNKS) + 1;
 			int group2chunk = (rand() % NUM_CHUNKS) + 1;
 
+			// Based on the random groups, choose the correct shared segment.
 			char* mem1;
 			char* mem2;
 
@@ -215,29 +242,32 @@ void performProcess(int numberOfOperations, SEMAPHORE& sem,
 			g1_start += (group1chunk - 1) * CHUNK_SIZE;
 			g2_start += (group2chunk - 1) * CHUNK_SIZE;
 
-			int offset = 0;
-			bool first = true;
+			int offset = 0;    // used to index second chunk
+			bool first = true; // flag checking for first iteration
 
 			// Swap
-			//cout << "Process " << getpid() << " attempting to swap" << endl;
-			sem.P(CRITICAL);
+			sem.P(CRITICAL); // Decrement sem
 			for (int i = g1_start; i < g1_start + CHUNK_SIZE; i++)
 			{
 				if (first)
 				{
+					// Starting critical section
 					first = false;
 					cout << "Process " << getpid() << " swapping" << endl;
 				}
+				// Swap algorithm
 				char temp = *(mem1 + i);
 				*(mem1 + i) = *(mem2 + g2_start + offset);
 				*(mem2 + g2_start + offset) = temp;
 				offset++;
 			}
+			// Critical secion over
 			cout << "Process " << getpid() << " done swapping" << endl;
-			sem.V(CRITICAL);
+			sem.V(CRITICAL); // Increment sem (P calls == V calls)
 
 			operationsComplete++;
 
+			// If we match the user's input, break the while loop
 			if (operationsComplete == numberOfOperations)
 			{
 				break;
