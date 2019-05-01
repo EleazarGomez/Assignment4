@@ -11,7 +11,7 @@ using namespace std;
 
 enum {CRITICAL};
 
-void performProcess(int, char*, SEMAPHORE&);
+void performProcess(int, SEMAPHORE&, char*, char*, char*, char*);
 int getUserInput();
 
 int main()
@@ -19,25 +19,47 @@ int main()
 	// Set seed
 	srand(time(NULL));
 
-	// Allocate a shared memory segment. (need 4 of these)
-	int segmentID = shmget(IPC_PRIVATE, TOTAL_SIZE * sizeof(char), PERMS);
+	// Allocate a shared memory segments.
+	int segmentID1 = shmget(IPC_PRIVATE, GROUP_SIZE * sizeof(char), PERMS);
+	int segmentID2 = shmget(IPC_PRIVATE, GROUP_SIZE * sizeof(char), PERMS);
+	int segmentID3 = shmget(IPC_PRIVATE, GROUP_SIZE * sizeof(char), PERMS);
+	int segmentID4 = shmget(IPC_PRIVATE, GROUP_SIZE * sizeof(char), PERMS);
 
-	// Attach to the shared memory segment.
-	char* str = (char*) shmat(segmentID, 0, SHM_RND);
+	// Attach to segments
+	char* str1 = (char*) shmat(segmentID1, 0, SHM_RND);
+	char* str2 = (char*) shmat(segmentID2, 0, SHM_RND);
+	char* str3 = (char*) shmat(segmentID3, 0, SHM_RND);
+	char* str4 = (char*) shmat(segmentID4, 0, SHM_RND);
 
-	// Intialize data (chars)
-	for (int i = G1C1_START; i <= G1C3_END; i++)
+	// Intialize chunk data
+	for (int i = CHUNK1_START; i <= CHUNK3_END; i++)
 	{
-		*(str + i) = LOWER_CASE_LETTERS[rand() % L_SIZE];
+		*(str1 + i) = LOWER_CASE_LETTERS[rand() % L_SIZE];
 	}
 
-	for (int i = G2C1_START; i <= G4C3_END; i++)
+	for (int i = CHUNK1_START; i <= CHUNK3_END; i++)
 	{
-		*(str + i) = UPPER_CASE_LETTERS[rand() % L_SIZE];
+		*(str2 + i) = UPPER_CASE_LETTERS[rand() % L_SIZE];
+	}
+
+	for (int i = CHUNK1_START; i <= CHUNK3_END; i++)
+	{
+		*(str3 + i) = UPPER_CASE_LETTERS[rand() % L_SIZE];
+	}
+
+	for (int i = CHUNK1_START; i <= CHUNK3_END; i++)
+	{
+		*(str4 + i) = UPPER_CASE_LETTERS[rand() % L_SIZE];
 	}
 
 	// Get input on number of operations
 	int numberOfOperations = getUserInput();
+
+	// Print intial data
+	printf("\n\nGroup1:\n\n%s\n", str1);
+	printf("\n\nGroup2:\n\n%s\n", str2);
+	printf("\n\nGroup3:\n\n%s\n", str3);
+	printf("\n\nGroup4:\n\n%s\n\n\n", str4);
 
 	// Initialize semaphore
 	SEMAPHORE sem(1);
@@ -57,7 +79,7 @@ int main()
 		{
 			//cout << "Process " << i << endl;
 
-			performProcess(numberOfOperations, str, sem);
+			performProcess(numberOfOperations, sem, str1, str2, str3, str4);
 
 			// Exit child process once finished
 			exit(0);
@@ -71,10 +93,23 @@ int main()
 	wait(NULL);
 	wait(NULL);
 
-	// Print results, detach, and destroy
-	//printf("\n\nData:\n\n%s\n", str);
-	shmdt(str); // detach
-	shmctl(segmentID, IPC_RMID, NULL); // destroy memory
+	// Print results
+	printf("\n\nGroup1:\n\n%s\n", str1);
+	printf("\n\nGroup2:\n\n%s\n", str2);
+	printf("\n\nGroup3:\n\n%s\n", str3);
+	printf("\n\nGroup4:\n\n%s\n", str4);
+	
+	// Detach from segments
+	shmdt(str1);
+	shmdt(str2);
+	shmdt(str3);
+	shmdt(str4);
+
+	// Destroy segment memory
+	shmctl(segmentID1, IPC_RMID, NULL);
+	shmctl(segmentID2, IPC_RMID, NULL);
+	shmctl(segmentID3, IPC_RMID, NULL);
+	shmctl(segmentID4, IPC_RMID, NULL);
 
 	return 0; 
 }
@@ -109,7 +144,8 @@ int getUserInput()
 	return numberOfOperations;
 }
 
-void performProcess(int numberOfOperations, char* str, SEMAPHORE& sem)
+void performProcess(int numberOfOperations, SEMAPHORE& sem,
+			  char* str1, char* str2, char* str3, char* str4)
 {
 	int speed_check = 0;
 	int operationsComplete = 0;
@@ -120,9 +156,6 @@ void performProcess(int numberOfOperations, char* str, SEMAPHORE& sem)
 
 		if (speed_check < SPEED)
 		{
-			//cout << operationsComplete << endl;
-			//cout << "\tspeed check: " << speed_check << endl;
-
 			int group1;
 			int group2;
 		
@@ -138,19 +171,45 @@ void performProcess(int numberOfOperations, char* str, SEMAPHORE& sem)
 			int group1chunk = (rand() % NUM_CHUNKS) + 1;
 			int group2chunk = (rand() % NUM_CHUNKS) + 1;
 
+			char* mem1;
+			char* mem2;
 
-			//cout << "\t\tGroup " << group1 << " Chunk " <<
-				  //group1chunk << endl;
-			//cout << "\t\tGroup " << group2 << " Chunk " <<
-				  //group2chunk << endl;
+			switch (group1)
+			{
+				case 1:
+					mem1 = str1;
+					break;
+				case 2:
+					mem1 = str2;
+					break;
+				case 3:
+					mem1 = str3;
+					break;
+				case 4:
+					mem1 = str4;
+					break;
+			}
+
+
+			switch (group2)
+			{
+				case 1:
+					mem2 = str1;
+					break;
+				case 2:
+					mem2 = str2;
+					break;
+				case 3:
+					mem2 = str3;
+					break;
+				case 4:
+					mem2 = str4;
+					break;
+			}
 
 			// Get starting indexes
 			int g1_start = 0;
 			int g2_start = 0;
-
-			// Offset based on group
-			g1_start += (group1 - 1) * GROUP_SIZE;
-			g2_start += (group2 - 1) * GROUP_SIZE;
 
 			// Offset based on chunk
 			g1_start += (group1chunk - 1) * CHUNK_SIZE;
@@ -169,9 +228,9 @@ void performProcess(int numberOfOperations, char* str, SEMAPHORE& sem)
 					first = false;
 					cout << "Process " << getpid() << " swapping" << endl;
 				}
-				char temp = *(str + i);
-				*(str + i) = *(str + g2_start + offset);
-				*(str + g2_start + offset) = temp;
+				char temp = *(mem1 + i);
+				*(mem1 + i) = *(mem2 + g2_start + offset);
+				*(mem2 + g2_start + offset) = temp;
 				offset++;
 			}
 			cout << "Process " << getpid() << " done swapping" << endl;
