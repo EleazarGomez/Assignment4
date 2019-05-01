@@ -19,7 +19,7 @@ int main()
 	// Set seed
 	srand(time(NULL));
 
-	// Allocate a shared memory segment.
+	// Allocate a shared memory segment. (need 4 of these)
 	int segmentID = shmget(IPC_PRIVATE, TOTAL_SIZE * sizeof(char), PERMS);
 
 	// Attach to the shared memory segment.
@@ -130,7 +130,6 @@ void performProcess(int numberOfOperations, char* str, SEMAPHORE& sem)
 			
 			group2 = group1;
 
-			// QUESTION: 2 DIFF GROUPS???
 			while (group2 == group1)
 			{
 				group2 = (rand() % NUM_GROUPS) + 1;
@@ -161,7 +160,7 @@ void performProcess(int numberOfOperations, char* str, SEMAPHORE& sem)
 			bool first = true;
 
 			// Swap
-			cout << "Process " << getpid() << " attempting to swap" << endl;
+			//cout << "Process " << getpid() << " attempting to swap" << endl;
 			sem.P(CRITICAL);
 			for (int i = g1_start; i < g1_start + CHUNK_SIZE; i++)
 			{
