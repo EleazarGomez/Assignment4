@@ -2,11 +2,11 @@
 // main.cpp
 //
 // This file contains the main logic of our program. The main function allocates
-// the shared memory segments (4 in total), intitializes them with characters,
+// the shared memory segments (4 in total), initializes them with characters,
 // gets input on number of operations for each process to carry out, and forks
 // 5 processes to perform swaps on the shared memory. The parent process waits
 // for the processes to complete and deallocates the memory. The main function
-// uses two other functions to carry out ints function, one for getting user
+// uses two other functions to carry out its purpose, one for getting user
 // input, and one for each child process to execute. The output of the program
 // consists of the groups of memory before any processes start, whenever a process
 // starts or finishes a critical section, the number of operations a process
@@ -38,10 +38,10 @@ int getUserInput();
 
 // "main" method. This method, as described above, allocates the shared memory
 // segments, initializes them with characters, forks child processes to perform
-// atomic swaps, waits, and dealloactes the memory.
+// atomic swaps, waits, and deallocates the memory.
 //
 // Pre-conditions:  None.
-// Post-conditions: Processes ran: memory was allocated, altered, then destroyed.
+// Post-conditions: Processes ran, memory was allocated, altered, then destroyed.
 int main()
 {
 	// Set seed
@@ -59,7 +59,7 @@ int main()
 	char* str3 = (char*) shmat(segmentID3, 0, SHM_RND);
 	char* str4 = (char*) shmat(segmentID4, 0, SHM_RND);
 
-	// Intialize chunk data
+	// Initialize chunk data
 	for (int i = CHUNK1_START; i <= CHUNK3_END; i++)
 	{
 		*(str1 + i) = LOWER_CASE_LETTERS[rand() % L_SIZE];
@@ -83,7 +83,7 @@ int main()
 	// Get input on number of operations
 	int numberOfOperations = getUserInput();
 
-	// Print intial data
+	// Print initial data
 	printf("\n\nGroup1:\n\n%s\n", str1);
 	printf("\n\nGroup2:\n\n%s\n", str2);
 	printf("\n\nGroup3:\n\n%s\n", str3);
@@ -101,9 +101,8 @@ int main()
 		childPID = fork();
 
 		// Set unique random seed for each process
-		// Source:
-		// https://stackoverflow.com/questions/12779235/
-		//         how-to-properly-choose-rng-seed-for-parallel-processes
+		// Source: https://stackoverflow.com/questions/12779235/
+		//                 how-to-properly-choose-rng-seed-for-parallel-processes
 		srand(time(NULL) * i * getpid());
 
 		if (childPID == 0) // CHILD
@@ -187,8 +186,8 @@ int getUserInput()
 // executing until it completes its required number of operations. The method
 // takes 6 parameters: the number of operations to complete (int), the sem var
 // (SEMAPHORE&), and the four shared memory segments (char*). The operations
-// take place in an infinite while loop that is only broken when the process
-// completes its operations. The first operation is to generate a random
+// take place in an repeating while loop that is only broken when the process
+// completes its operations. The first act is to generate a random
 // 32 bit integer, and check if its less than the number provided in the lab
 // instructions in order to slow the process down. If this occurs the main
 // functionality of the function takes place: the random choosing of two of
@@ -198,8 +197,8 @@ int getUserInput()
 //
 // Pre-conditions:  The four shared memory segments have been allocated,
 //                  the number of operations has been retrieved, and the
-//                  sem var has been intialized.
-// Post-conditions: The process has completed and is returning the main function.
+//                  sem var has been initialized.
+// Post-conditions: The process has completed and is returning to the main function.
 void performProcess(int numberOfOperations, SEMAPHORE& sem,
 			  char* str1, char* str2, char* str3, char* str4)
 {
@@ -226,7 +225,7 @@ void performProcess(int numberOfOperations, SEMAPHORE& sem,
 				group2 = (rand() % NUM_GROUPS) + 1;
 			}
 
-			// Get ranom chunks for the groups.
+			// Get random chunks for the groups.
 			int group1chunk = (rand() % NUM_CHUNKS) + 1;
 			int group2chunk = (rand() % NUM_CHUNKS) + 1;
 
@@ -294,7 +293,7 @@ void performProcess(int numberOfOperations, SEMAPHORE& sem,
 				*(mem2 + g2_start + offset) = temp;
 				offset++;
 			}
-			// Critical secion over
+			// Critical section over
 			cout << "Process " << getpid() << " done swapping" << endl;
 			sem.V(CRITICAL); // Increment sem (P calls == V calls)
 

@@ -1,9 +1,9 @@
 // Eleazar Gomez, Anton Shirokov
-// main.cpp
+// constants.h
 //
 // This file contains the constants used throughout our program so that
-// we can eliminate magic numbers. It includes arrays of characters for,
-// initializeing chunk data, group and chunk attributes, and the value
+// we can eliminate magic numbers. It includes arrays of characters for
+// initializing chunk data, group and chunk attributes, and the value
 // to check speed_check against to slow down the processes.
 
 #ifndef CONSTANTS_H
@@ -24,7 +24,7 @@ const char UPPER_CASE_LETTERS[26] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
 // Size letter arrays
 const int L_SIZE = 26;
 
-// Start and end indicies for intial setup
+// Start and end indicies for initial setup
 const int CHUNK1_START = 0;
 const int CHUNK3_END = 1535;
 
