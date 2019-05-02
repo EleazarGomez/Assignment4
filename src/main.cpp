@@ -9,13 +9,14 @@
 // uses two other functions to carry out ints function, one for getting user
 // input, and one for each child process to execute. The output of the program
 // consists of the groups of memory before any processes start, whenever a process
-// starts or finishes a critical section, and the groups of memory after all
-// processes finish. To make sure that only one process can be executing a
-// critical section at a time, we included the semaphore code provided by the
-// professor. We only use one semaphore variable (CRITICAL) that starts at 1. We
-// call P before the critical section and V after; this setup results in the first
-// process to reach this section being able to execute it and each subsequent
-// process being unable to start the section until the other(s) are finished.
+// starts or finishes a critical section, the number of operations a process
+// completed, and the groups of memory after all processes finish. To make sure
+// that only one process can be executing a critical section at a time, we included
+// the semaphore code provided by the professor. We only use one semaphore variable
+// (CRITICAL) that starts at 1. We call P before the critical section and V after;
+// this setup results in the first process to reach this section being able to
+// execute it and each subsequent process being unable to start the section until
+// the other(s) are finished.
 
 #include <string>      // string
 #include <iostream>    // IO
@@ -34,6 +35,13 @@ enum {CRITICAL}; // sem var
 void performProcess(int, SEMAPHORE&, char*, char*, char*, char*);
 int getUserInput();
 
+
+// "main" method. This method, as described above, allocates the shared memory
+// segments, initializes them with characters, forks child processes to perform
+// atomic swaps, waits, and dealloactes the memory.
+//
+// Pre-conditions:  None.
+// Post-conditions: Processes ran: memory was allocated, altered, then destroyed.
 int main()
 {
 	// Set seed
@@ -93,6 +101,7 @@ int main()
 		childPID = fork();
 
 		// Set unique random seed for each process
+		// Source:
 		// https://stackoverflow.com/questions/12779235/
 		//         how-to-properly-choose-rng-seed-for-parallel-processes
 		srand(time(NULL) * i * getpid());
@@ -134,6 +143,12 @@ int main()
 	return 0; 
 }
 
+// "getUserInput" method. This method takes no parameters. Its only function is
+// to retrieve the number of operations for each process to execute and return it.
+// This value can not be 0 or less. The function checks for invalid input.
+//
+// Pre-conditions:  None.
+// Post-conditions: Integer representing the number of operations is returned.
 int getUserInput()
 {
 	int numberOfOperations = 0;
@@ -167,6 +182,24 @@ int getUserInput()
 	return numberOfOperations;
 }
 
+
+// "performProcess" method. This is the method that each process will be
+// executing until it completes its required number of operations. The method
+// takes 6 parameters: the number of operations to complete (int), the sem var
+// (SEMAPHORE&), and the four shared memory segments (char*). The operations
+// take place in an infinite while loop that is only broken when the process
+// completes its operations. The first operation is to generate a random
+// 32 bit integer, and check if its less than the number provided in the lab
+// instructions in order to slow the process down. If this occurs the main
+// functionality of the function takes place: the random choosing of two of
+// the segments and one chunk in each section, and the atomic swapping of
+// these chunks. The sem var is incremented and decremented in order to prevent
+// two processes from performing this section at once.
+//
+// Pre-conditions:  The four shared memory segments have been allocated,
+//                  the number of operations has been retrieved, and the
+//                  sem var has been intialized.
+// Post-conditions: The process has completed and is returning the main function.
 void performProcess(int numberOfOperations, SEMAPHORE& sem,
 			  char* str1, char* str2, char* str3, char* str4)
 {
@@ -270,6 +303,11 @@ void performProcess(int numberOfOperations, SEMAPHORE& sem,
 			// If we match the user's input, break the while loop
 			if (operationsComplete == numberOfOperations)
 			{
+				// This output shows there was no deadlock.
+				cout << endl;
+				cout << getpid() << " completed " << operationsComplete;
+				cout << " operations" << endl;
+				cout << endl;
 				break;
 			}
 		}
