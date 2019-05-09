@@ -94,7 +94,7 @@ int main()
 	sem.V(CRITICAL);
 
 	// Fork
-	for (int i = 1; i < NUM_PROCESSES + 1; i++)
+	for (int i = 0; i < NUM_PROCESSES - 1; i++)
 	{
 		long childPID = 0; // Stores PID of child (0 if it is the child)
 
@@ -112,14 +112,17 @@ int main()
 			// Exit child process once finished
 			exit(0);
 		}
-	}
+		else if (i == NUM_PROCESSES - 2) // PARENT - FINAL ITERATION - P5
+		{
+			performProcess(numberOfOperations, sem, str1, str2, str3, str4);
 
-	// Wait for all processes to finish
-	wait(NULL);
-	wait(NULL);
-	wait(NULL);
-	wait(NULL);
-	wait(NULL);
+			// Wait for all processes to finish
+			wait(NULL);
+			wait(NULL);
+			wait(NULL);
+			wait(NULL);
+		}
+	}
 
 	// Print results
 	printf("\n\nGroup1:\n\n%s\n", str1);
